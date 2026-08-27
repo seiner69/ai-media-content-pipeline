@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+runs/
+media/
+.voice_cache/
+.gpt_sovits_cache/
+*.wav
+*.mp3
+*.mp4
+*.log
+.env
+.env.*
+!.env.example

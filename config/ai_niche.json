@@ -1,0 +1,57 @@
+{
+  "account": {
+    "name": "AI Creator Lab",
+    "niche": "AI knowledge for ordinary creators and solo builders",
+    "audience": ["普通人", "自媒体创作者", "独立开发者", "职场人", "小团队老板"],
+    "positioning": "把 AI 新闻、工具、技术趋势翻译成普通人能执行的生产力方法"
+  },
+  "sources": {
+    "hotlists": {
+      "douyin": "https://60s.viki.moe/v2/douyin",
+      "weibo": "https://60s.viki.moe/v2/weibo",
+      "zhihu": "https://60s.viki.moe/v2/zhihu"
+    },
+    "github_search": [
+      "AI agent",
+      "AI video generator",
+      "content automation AI",
+      "social media automation AI",
+      "AI news agent"
+    ],
+    "hackernews_queries": [
+      "AI agent",
+      "LLM",
+      "AI video",
+      "AI coding",
+      "automation"
+    ],
+    "manual_watchlist": [
+      "https://www.36kr.com/information/AI/",
+      "https://www.jiqizhixin.com/",
+      "https://www.qbitai.com/",
+      "https://github.com/trending",
+      "https://news.ycombinator.com/"
+    ]
+  },
+  "keywords": {
+    "ai_core": ["AI", "人工智能", "大模型", "模型", "Agent", "智能体", "LLM", "ChatGPT", "OpenAI", "DeepSeek", "Claude", "Gemini", "Kimi", "豆包", "通义", "Sora"],
+    "creator": ["自媒体", "短视频", "内容", "视频", "脚本", "文案", "配音", "字幕", "封面", "发布", "流量", "爆款", "剪辑"],
+    "ordinary_people": ["普通人", "工作", "职业", "赚钱", "效率", "学习", "焦虑", "副业", "创业", "独立开发", "个人"],
+    "conflict": ["取代", "淘汰", "危险", "机会", "真相", "误区", "不是", "为什么", "如何", "突然", "暴涨", "崩了", "改变"],
+    "visual": ["数据", "榜单", "报告", "对比", "流程", "案例", "项目", "工具", "产品", "开源", "GitHub"]
+  },
+  "scoring": {
+    "ai_relevance": 25,
+    "audience_relevance": 20,
+    "conflict": 15,
+    "visual_evidence": 15,
+    "format_fit": 15,
+    "timeliness": 10
+  },
+  "video_style": {
+    "base_project": "projects/video-renderer",
+    "duration_target_seconds": [75, 95],
+    "caption_bottom_safe_px": 318,
+    "visual_language": ["dark tech editorial", "teal signal", "brass emphasis", "cards", "process maps", "comparison panels"]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "sample_rate": 24000,
+  "seed": 3179,
+  "speaker_seed": 3179,
+  "peak": 0.82,
+  "caption_window": "CAPTIONS_V3",
+  "styles": {
+    "hook": {
+      "description": "开头钩子，稍慢，压住反差，句尾停顿明显",
+      "refine_prompt": "[oral_2][break_5]",
+      "infer_prompt": "[speed_4]",
+      "temperature": 0.24,
+      "top_P": 0.65,
+      "top_K": 20,
+      "pause_after": 0.34,
+      "caption_extra": 0.12,
+      "caption_min_duration": 1.2
+    },
+    "short": {
+      "description": "极短判断句，读得干脆，留出明显停顿",
+      "refine_prompt": "[oral_1][break_5]",
+      "infer_prompt": "[speed_4]",
+      "temperature": 0.22,
+      "top_P": 0.62,
+      "top_K": 20,
+      "pause_after": 0.38,
+      "caption_extra": 0.1,
+      "caption_min_duration": 0.9
+    },
+    "explain": {
+      "description": "解释句，清楚、稳定、略快",
+      "refine_prompt": "[oral_1][break_3]",
+      "infer_prompt": "[speed_5]",
+      "temperature": 0.24,
+      "top_P": 0.65,
+      "top_K": 20,
+      "pause_after": 0.14,
+      "caption_extra": 0.08,
+      "caption_min_duration": 1.0
+    },
+    "emphasis": {
+      "description": "关键判断，略慢一点，重读感更强",
+      "refine_prompt": "[oral_2][break_4]",
+      "infer_prompt": "[speed_4]",
+      "temperature": 0.22,
+      "top_P": 0.62,
+      "top_K": 20,
+      "pause_after": 0.26,
+      "caption_extra": 0.12,
+      "caption_min_duration": 1.2
+    },
+    "list": {
+      "description": "列举句，短促清晰，便于和画面卡片同步",
+      "refine_prompt": "[oral_1][break_4]",
+      "infer_prompt": "[speed_5]",
+      "temperature": 0.23,
+      "top_P": 0.64,
+      "top_K": 20,
+      "pause_after": 0.18,
+      "caption_extra": 0.08,
+      "caption_min_duration": 0.9
+    },
+    "ending": {
+      "description": "结尾金句，稍慢，收束，句尾留白",
+      "refine_prompt": "[oral_2][break_5]",
+      "infer_prompt": "[speed_4]",
+      "temperature": 0.2,
+      "top_P": 0.6,
+      "top_K": 20,
+      "pause_after": 0.42,
+      "caption_extra": 0.14,
+      "caption_min_duration": 1.3
+    }
+  }
+}
