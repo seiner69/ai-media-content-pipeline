@@ -162,8 +162,15 @@ def edit_stats(expected_norm: str, actual_norm: str) -> EditStats:
         elif tag == "delete":
             stats.deleted_chars += i2 - i1
         elif tag == "replace":
-            stats.replaced_expected_chars += i2 - i1
-            stats.replaced_actual_chars += j2 - j1
+            expected_count = i2 - i1
+            actual_count = j2 - j1
+            paired_count = min(expected_count, actual_count)
+            stats.replaced_expected_chars += paired_count
+            stats.replaced_actual_chars += paired_count
+            # A replace opcode may hide extra or missing characters.
+            # Account per block, so opposite surpluses cannot cancel out.
+            stats.inserted_chars += max(0, actual_count - expected_count)
+            stats.deleted_chars += max(0, expected_count - actual_count)
     return stats
 
 
@@ -211,6 +218,7 @@ def render_report(
         f"- Strict similarity: {similarity:.4f}",
         f"- Tolerant similarity: {tolerant_similarity:.4f}",
         f"- Risk: {risk_level(tolerant_similarity)}",
+        f"- Publish gate(final, strict): `{publish_gate(strict_stats)}`",
         f"- Publish gate(strict): `{publish_gate(strict_stats)}`",
         f"- Publish gate(tolerant): `{publish_gate(tolerant_stats)}`",
         f"- Strict inserted chars: {strict_stats.inserted_chars}",
@@ -228,10 +236,10 @@ def render_report(
         "## 结论",
         "",
     ]
-    lines.append("发布硬门槛：`insert/delete = 0` 才能通过；`replace` 只作为错别字或 ASR 错听候选进入人工复核。")
-    if publish_gate(tolerant_stats) == "fail_extra_or_missing":
+    lines.append("发布硬门槛以严格比较为准：`insert/delete = 0` 才能通过；等长 `replace` 只作为错别字或 ASR 错听候选进入人工复核。宽容比较仅用于辅助诊断，不能覆盖严格失败。")
+    if publish_gate(strict_stats) == "fail_extra_or_missing":
         lines.append("当前不通过发布硬门槛：识别结果里仍存在多字或少字，需要换更高精度 ASR/人工听审/重新生成音频后再放行。")
-    elif publish_gate(tolerant_stats) == "review_typo_only":
+    elif publish_gate(strict_stats) == "review_typo_only":
         lines.append("当前没有发现多字或少字，但存在替换字，需要人工确认是否只是错别字或 ASR 错听。")
     else:
         lines.append("当前通过发布硬门槛：未发现多字、少字或替换字。")
@@ -243,7 +251,7 @@ def render_report(
     else:
         lines.append("辅助判断：整体差异较大，不建议继续使用该音频。")
     lines.append("")
-    lines.append("说明：严格分数直接比较 ASR 原始识别稿；宽容分数会归一化 AI Agent、执行、步骤、选题、脚本、复盘等常见中文 ASR 错听。最终放行以发布硬门槛为准。")
+    lines.append("说明：严格比较仅归一化布局、标点、大小写及约定的方括号控制标签，不使用词语别名。宽容比较还会替换常见错听并忽略部分口头词，因此不作为放行依据。不等长替换按每块长度差计入增删字；机器差异不能代替人工听审。")
 
     lines.extend(["", "## ASR 识别稿", "", transcript or "(empty)", "", "## 差异片段", ""])
     if not diffs:
@@ -309,6 +317,7 @@ def main() -> int:
                 "similarity": similarity,
                 "tolerant_similarity": tolerant_similarity,
                 "risk": risk_level(tolerant_similarity),
+                "publish_gate": publish_gate(strict_stats),
                 "publish_gate_strict": publish_gate(strict_stats),
                 "publish_gate_tolerant": publish_gate(tolerant_stats),
                 "strict_edit_stats": asdict(strict_stats),
@@ -348,6 +357,7 @@ def main() -> int:
     print(f"SIMILARITY={similarity:.4f}")
     print(f"TOLERANT_SIMILARITY={tolerant_similarity:.4f}")
     print(f"RISK={risk_level(tolerant_similarity)}")
+    print(f"PUBLISH_GATE={publish_gate(strict_stats)}")
     print(f"PUBLISH_GATE_STRICT={publish_gate(strict_stats)}")
     print(f"PUBLISH_GATE_TOLERANT={publish_gate(tolerant_stats)}")
     print(f"STRICT_INSERTED={strict_stats.inserted_chars}")

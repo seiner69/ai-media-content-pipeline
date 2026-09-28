@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 import importlib.util
+import contextlib
+import io
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,6 +83,51 @@ class AsrGateTests(unittest.TestCase):
         changed = asr.edit_stats("abcdef", "abcxef")
         self.assertEqual(asr.publish_gate(clean), "pass_exact")
         self.assertEqual(asr.publish_gate(changed), "review_typo_only")
+
+    def test_unequal_replacements_count_surplus_as_insertions_or_deletions(self):
+        for expected, actual, inserted, deleted in [
+            ("abc", "axyc", 1, 0),
+            ("axyc", "abc", 0, 1),
+            ("甲乙丙", "甲丁戊丙", 1, 0),
+        ]:
+            with self.subTest(expected=expected, actual=actual):
+                stats = asr.edit_stats(expected, actual)
+                self.assertEqual((stats.inserted_chars, stats.deleted_chars), (inserted, deleted))
+                self.assertEqual(stats.replaced_expected_chars, stats.replaced_actual_chars)
+                self.assertEqual(asr.publish_gate(stats), "fail_extra_or_missing")
+
+    def test_separate_replacement_surpluses_do_not_cancel_each_other(self):
+        stats = asr.edit_stats("abMIDDLEyz", "axyMIDDLEw")
+        self.assertEqual((stats.inserted_chars, stats.deleted_chars), (1, 1))
+        self.assertEqual(asr.publish_gate(stats), "fail_extra_or_missing")
+
+    def test_report_does_not_let_tolerant_aliases_override_strict_failure(self):
+        expected, actual = "开始执行任务", "开始然后执行任务"
+        strict = asr.edit_stats(asr.normalize_for_compare(expected), asr.normalize_for_compare(actual))
+        tolerant = asr.edit_stats(asr.normalize_for_compare(expected, True), asr.normalize_for_compare(actual, True))
+        self.assertEqual(asr.publish_gate(tolerant), "pass_exact")
+        report = asr.render_report(Path("audio.wav"), Path("script.md"), actual, [], expected,
+                                   0.9, 1.0, [], strict, tolerant, "synthetic", "none")
+        self.assertIn("当前不通过发布硬门槛", report)
+        self.assertNotIn("当前通过发布硬门槛", report)
+
+    def test_cli_json_and_stdout_expose_strict_authoritative_gate(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            expected = root / "script.txt"
+            expected.write_text("开始执行任务", encoding="utf-8")
+            output = root / "output"
+            argv = ["asr_compare", "--audio", str(root / "voice.wav"),
+                    "--expected", str(expected), "--out-dir", str(output)]
+            with patch.object(sys, "argv", argv), \
+                 patch.object(asr, "transcribe_faster_whisper", return_value=("开始然后执行任务", [])), \
+                 contextlib.redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(asr.main(), 0)
+            report = json.loads((output / "voice.asr_compare.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["publish_gate"], "fail_extra_or_missing")
+            self.assertEqual(report["publish_gate"], report["publish_gate_strict"])
+            self.assertEqual(report["publish_gate_tolerant"], "pass_exact")
+            self.assertIn("PUBLISH_GATE=fail_extra_or_missing", stdout.getvalue())
 
 
 class FeedbackTests(unittest.TestCase):
